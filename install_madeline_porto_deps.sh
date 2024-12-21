@@ -1,18 +1,23 @@
 #!/bin/bash
 
+# Функция для автоматического ответа на запросы apt
+apt_noninteractive() {
+    DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" "$@"
+}
+
 # Обновление списка пакетов
-apt update
+apt_noninteractive update
 
 # Добавление репозитория PHP
 add-apt-repository ppa:ondrej/php -y
-apt update
+apt_noninteractive update
 
 # Удаление старых версий PHP
-apt remove -y php7.4 php7.4-* php8.0 php8.0-* php8.1 php8.1-*
-apt autoremove -y
+apt_noninteractive remove php7.4 php7.4-* php8.0 php8.0-* php8.1 php8.1-*
+apt_noninteractive autoremove
 
 # Установка PHP 8.3 и необходимых расширений
-apt install -y php8.3 php8.3-cli php8.3-common php8.3-curl php8.3-mbstring php8.3-mysql php8.3-xml php8.3-zip php8.3-gd php8.3-bcmath php8.3-intl php8.3-readline php8.3-ldap php8.3-tidy php8.3-soap php8.3-igbinary php8.3-memcached php8.3-redis php8.3-gmp
+apt_noninteractive install php8.3 php8.3-cli php8.3-common php8.3-curl php8.3-mbstring php8.3-mysql php8.3-xml php8.3-zip php8.3-gd php8.3-bcmath php8.3-intl php8.3-readline php8.3-ldap php8.3-tidy php8.3-soap php8.3-igbinary php8.3-memcached php8.3-redis php8.3-gmp
 
 # Установка ioncube loader для PHP 8.3
 wget https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz
