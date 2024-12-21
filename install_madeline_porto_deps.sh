@@ -10,7 +10,7 @@ apt_noninteractive() {
     DEBIAN_FRONTEND=noninteractive apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" "$@"
 }
 
-log_message "Начало выполнения скрипта"
+log_message "Начало выполнения скрипта для установки PHP 8.3 для Madeline Porto и Fast Panel"
 
 # Обновление списка пакетов
 log_message "Обновление списка пакетов"
@@ -44,16 +44,11 @@ apt_noninteractive install ffmpeg
 log_message "Очистка временных файлов"
 rm -rf ioncube*
 
-# Настройка Apache для использования PHP 8.3 по умолчанию
-log_message "Настройка Apache для использования PHP 8.3"
-a2enmod php8.3
-a2dismod php7.4 php8.0 php8.1 php8.2 php8.4
+# Настройка PHP 8.3 как версии по умолчанию
+log_message "Настройка PHP 8.3 как версии по умолчанию"
 update-alternatives --set php /usr/bin/php8.3
-
-# Перезапуск Apache и PHP-FPM
-log_message "Перезапуск Apache и PHP-FPM"
-systemctl restart apache2
-systemctl restart php8.3-fpm
+update-alternatives --set phar /usr/bin/phar8.3
+update-alternatives --set phar.phar /usr/bin/phar.phar8.3
 
 # Обновление конфигураций Fast Panel
 log_message "Обновление конфигураций Fast Panel"
@@ -65,12 +60,19 @@ else
     log_message "Файл php_versions.conf не найден. Пропуск обновления Fast Panel."
 fi
 
-# Перезапуск Nginx
-log_message "Перезапуск Nginx"
+# Перезапуск PHP-FPM и Nginx
+log_message "Перезапуск PHP-FPM и Nginx"
+systemctl restart php8.3-fpm
 systemctl restart nginx
 
 # Проверка установленной версии PHP
 INSTALLED_PHP_VERSION=$(php -r "echo PHP_VERSION;")
-log_message "Установленная версия PHP по умолчанию: $INSTALLED_PHP_VERSION"
+log_message "Установленная версия PHP CLI: $INSTALLED_PHP_VERSION"
+FPM_VERSION=$(php-fpm8.3 -v | head -n 1 | cut -d ' ' -f 2)
+log_message "Установленная версия PHP-FPM: $FPM_VERSION"
 
-echo "Установка завершена. PHP версии 8.3 установлен с необходимыми расширениями, ioncube loader и ffmpeg. PHP 8.3 настроен как версия по умолчанию."
+# Проверка статуса PHP-FPM
+log_message "Проверка статуса PHP-FPM"
+systemctl status php8.3-fpm
+
+echo "Установка завершена. PHP версии 8.3 установлен с необходимыми расширениями, ioncube loader и ffmpeg. PHP 8.3 настроен как версия по умолчанию для CLI и FPM."
