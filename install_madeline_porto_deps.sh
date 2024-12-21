@@ -7,13 +7,17 @@ apt update
 add-apt-repository ppa:ondrej/php -y
 apt update
 
-# Установка PHP 8.2 и необходимых расширений
-apt install -y php8.2 php8.2-cli php8.2-common php8.2-curl php8.2-mbstring php8.2-mysql php8.2-xml php8.2-zip php8.2-gd php8.2-bcmath php8.2-intl php8.2-readline php8.2-ldap php8.2-tidy php8.2-soap php8.2-igbinary php8.2-memcached php8.2-redis
+# Удаление старых версий PHP
+apt remove -y php7.4 php7.4-* php8.0 php8.0-* php8.1 php8.1-*
+apt autoremove -y
 
-# Установка ioncube loader
+# Установка PHP 8.3 и необходимых расширений
+apt install -y php8.3 php8.3-cli php8.3-common php8.3-curl php8.3-mbstring php8.3-mysql php8.3-xml php8.3-zip php8.3-gd php8.3-bcmath php8.3-intl php8.3-readline php8.3-ldap php8.3-tidy php8.3-soap php8.3-igbinary php8.3-memcached php8.3-redis php8.3-gmp
+
+# Установка ioncube loader для PHP 8.3
 wget https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.tar.gz
 tar xzf ioncube_loaders_lin_x86-64.tar.gz
-PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
+PHP_VERSION="8.3"
 PHP_EXT_DIR=$(php -i | grep extension_dir | awk '{print $3}')
 cp ioncube/ioncube_loader_lin_${PHP_VERSION}.so ${PHP_EXT_DIR}
 echo "zend_extension=ioncube_loader_lin_${PHP_VERSION}.so" > /etc/php/${PHP_VERSION}/mods-available/ioncube.ini
@@ -26,7 +30,17 @@ apt install -y ffmpeg
 # Очистка
 rm -rf ioncube*
 
-# Перезапуск PHP-FPM
-systemctl restart php${PHP_VERSION}-fpm
+# Настройка Apache для использования PHP 8.3 по умолчанию
+a2dismod php7.4 php8.0 php8.1
+a2enmod php8.3
 
-echo "Установка завершена. PHP версии ${PHP_VERSION} установлен с необходимыми расширениями, ioncube loader и ffmpeg."
+# Перезапуск Apache и PHP-FPM
+systemctl restart apache2
+systemctl restart php8.3-fpm
+
+# Удаление конфигураций старых версий PHP из Fast Panel
+rm -f /etc/nginx/fastpanel2/php_versions/php7.4.conf
+rm -f /etc/nginx/fastpanel2/php_versions/php8.0.conf
+rm -f /etc/nginx/fastpanel2/php_versions/php8.1.conf
+
+echo "Установка завершена. PHP версии 8.3 установлен с необходимыми расширениями, ioncube loader и ffmpeg. Старые версии PHP удалены."
